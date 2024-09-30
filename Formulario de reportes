@@ -1,0 +1,94 @@
+//formulario de reportes.js//
+import React, { startTransition, useState } from 'react';
+import axios from 'axios';
+
+const ReportForm = () => {
+  const [description, setDescription] = useState('');
+  const [problemType, setProblemType] = useState('');
+  const [image, setImage] = useState(null);
+  const [error, setError] = useState('');
+
+  //Subir imágenes//
+  const handleImageChange = (e) => {
+    setImage(e.target.files[0]);
+  };
+
+  // Envío y validación del formulario//
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Validación de campos//
+    if (!description || !problemType || !image) {
+      setError('Por favor, completa todos los campos.');
+      return;
+    }
+
+    //Crear un FormData para enviar los datos y la imagen//
+    const formData = new FormData();
+    formData.append('description', description);
+    formData.append('problemType', problemType);
+    formData.append('image', image);
+
+    try {
+      //Enviar los datos al backend//
+      await axios.post('http://localhost:5000/api/report-problem', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      // Limpiar el formulario tras el envío exitoso
+      alert('Problema reportado con éxito');
+      setDescription('');
+      setProblemType('');
+      setImage(null);
+      setError('');
+    } catch (error) {
+      setError('Hubo un error al enviar el reporte. Por favor, inténtalo de nuevo.');
+    }
+  };
+
+  return (
+    <div>
+      <h2>Reportar un Problema</h2>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label>Descripción del problema:</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Describe el problema"
+            required
+          />
+        </div>
+        <div>
+          <label>Tipo de problema:</label>
+          <select
+            value={problemType}
+            onChange={(e) => setProblemType(e.target.value)}
+            required
+          >
+            <option value="">Selecciona el tipo de problema</option>
+            <option value="Fallas eléctricas">Fallas eléctricas</option>
+            <option value="Averías de agua">Averías de agua</option>
+            <option value="Seguridad">Seguridad</option>
+            <option value="Otros">Otros</option>
+          </select>
+        </div>
+        <div>
+          <label>Adjuntar una imagen:</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            required
+          />
+        </div>
+        <button type="submit">Enviar Reporte</button>
+      </form>
+    </div>
+  );
+};
+
+export default ReportForm
